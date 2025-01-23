@@ -10,62 +10,64 @@ app.use(bodyParser.json());
 // === Category APIs ===
 
 // Create a category
-app.post("/categories", async (req, res) => {
-  const { name, parentId } = req.body;
-
-  try {
-    const category = await prisma.category.create({
-      data: {
-        name,
-        parentId,
-      },
-    });
-    res.status(201).json(category);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get all categories (including subcategories)
-app.get("/categories", async (req, res) => {
-  try {
-    const categories = await prisma.category.findMany({
-      include: {
-        subcategories: true,
-      },
-    });
-    res.status(200).json(categories);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 // Get a category by ID
-app.get("/categories/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const category = await prisma.category.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        parent: true,
-        subcategories: true,
-      },
-    });
-
-    if (!category) {
-      return res.status(404).json({ error: "Category not found" });
+app.post("/categories", async (req, res) => {
+    const { name, parentId } = req.body;
+  
+    try {
+      const category = await prisma.category.create({
+        data: {
+          name,
+          parent: parentId ? { connect: { id: parentId } } : undefined, // If parentId is provided, connect it
+        },
+      });
+      res.status(201).json(category);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create category", details: error.message });
     }
-
-    res.status(200).json(category);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// === Food Item APIs ===
-
-// Create a food item
+  });
+  
+  // === Add Subcategory API ===
+  app.post("/subcategories", async (req, res) => {
+    const { name, parentId } = req.body;
+  
+    if (!name || !parentId) {
+      return res.status(400).json({
+        error: "Subcategory name and parentId are required",
+      });
+    }
+  
+    try {
+      // Check if parent category exists
+      const parentCategory = await prisma.category.findUnique({
+        where: { id: parentId },
+      });
+  
+      if (!parentCategory) {
+        return res.status(404).json({ error: "Parent category not found" });
+      }
+  
+      // Create subcategory under the parent category
+      const subcategory = await prisma.category.create({
+        data: {
+          name,
+          parent: {
+            connect: { id: parentId }, // Correctly connect the parent category
+          },
+        },
+      });
+  
+      // Respond with the created subcategory
+      res.status(201).json(subcategory);
+    } catch (error) {
+      res.status(500).json({
+        error: "Failed to create subcategory",
+        details: error.message,
+      });
+    }
+  });
+  
 app.post("/food-items", async (req, res) => {
   const { name, price, categoryId } = req.body;
 

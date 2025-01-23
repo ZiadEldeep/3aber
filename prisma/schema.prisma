@@ -15,39 +15,40 @@ model User {
   lastName  String?
   createdAt DateTime @default(now())
 
-  orders    Order[]  // One-to-many relation with Order model
-}
-
-model FoodItem {
-  id          String   @id @map("_id") @default(auto()) @db.ObjectId
-  name        String
-  price       Float
-  categoryId  String    @db.ObjectId
-  category    Category @relation(fields: [categoryId], references: [id])
-
-  orders      Order[]  // One-to-many relation with Order model
+  // Relationship with orders
+  // orders    Order[]  // One-to-many relation with Order model
 }
 
 model Category {
-  id            String       @id @map("_id") @default(auto()) @db.ObjectId
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   parentId      String?      @db.ObjectId
   parent        Category?    @relation("CategoryToSubcategory", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subcategories Category[]   @relation("CategoryToSubcategory")
-
   foodItems     FoodItem[]   // One-to-many relation with FoodItem model
 }
 
-model Order {
-  id           String    @id @map("_id") @default(auto()) @db.ObjectId
-  quantity     Int
-  notes        String?
-  discountCoupon String?
-  createdAt    DateTime  @default(now())
+// model Order {
+//   id             String    @id @map("_id") @default(auto()) @db.ObjectId
+//   quantity       Int
+//   notes          String?
+//   discountCoupon String?
+//   createdAt      DateTime  @default(now())
 
-  foodItemId   String   @db.ObjectId
-  foodItem     FoodItem @relation(fields: [foodItemId], references: [id])
+//   // Relation with FoodItem
+//   foodItemId     String    @db.ObjectId
+//   foodItem       FoodItem  @relation(fields: [foodItemId], references: [id])
 
-  userId       String   @db.ObjectId
-  user         User     @relation(fields: [userId], references: [id])
+//   // Relation with User
+//   userId         String    @db.ObjectId
+//   user           User      @relation(fields: [userId], references: [id])
+// }
+
+model FoodItem {
+  id        String   @id @map("_id") @default(auto()) @db.ObjectId
+  name      String
+  price     Float
+  createdAt DateTime @default(now())  // Ensure this has a default value
+  category  Category @relation(fields: [categoryId], references: [id])
+  categoryId String @db.ObjectId
 }
