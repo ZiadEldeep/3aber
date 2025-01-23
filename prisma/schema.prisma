@@ -29,9 +29,13 @@ model FoodItem {
 }
 
 model Category {
-  id          String    @id @map("_id") @default(auto()) @db.ObjectId
-  name        String
-  foodItems   FoodItem[] // One-to-many relation with FoodItem model
+  id            String       @id @map("_id") @default(auto()) @db.ObjectId
+  name          String
+  parentId      String?      @db.ObjectId
+  parent        Category?    @relation("CategoryToSubcategory", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subcategories Category[]   @relation("CategoryToSubcategory")
+
+  foodItems     FoodItem[]   // One-to-many relation with FoodItem model
 }
 
 model Order {
